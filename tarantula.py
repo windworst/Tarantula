@@ -53,7 +53,7 @@ class runner:
 
 # # # # # # Bfser # # # # # # # # # # # # 
 
-class bfser:
+class bfser:http://www.cz88.net/down/download.php?id=234&url=Y3o4OF5xbW1pIzY2fXU3fnZ2fnV8N3p2dDZpcHdgcHc2bys2fnZ2fnV8aXB3YHB3cHdqbXh1dXxrN3xhfCRjejg4
 	bfs_set = 0
 	bfs_list = 0
 	list_index = 0
@@ -105,6 +105,7 @@ import sys
 
 class urlcrawler:
 
+	timeout = 5
 	collector = 0
 	url = 0
 
@@ -130,11 +131,10 @@ class urlcrawler:
 		try:
 			headers = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'} 
 			req = urllib2.Request(url,headers = headers)
-			page =  urllib2.urlopen(url).read()
+			page =  urllib2.urlopen(req,timeout = self.timeout).read()
 		except:
 			return False
 		type = sys.getfilesystemencoding()  
-		page = page.decode("gbk","ignore")
 		return page
 
 	def usable_url(self,url):
@@ -219,11 +219,8 @@ class simple_collector:
 		self.result.append(url+'\n')
 		self.mutex.release()
 
-'''
-"whois".decode("ascii","ignore")
-'''
-import socket
-socket.setdefaulttimeout(5) 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
 
 s = simple_collector()
 u = urlcrawler("http://www.cz88.net",s)
@@ -235,6 +232,4 @@ open_threads(r,100)
 
 s.result.sort()
 f = open("save.txt","w")
-#for ip,port in s.result:
-#	f.write('%s:%d\n'%(ip,port))
 f.writelines(s.result)
