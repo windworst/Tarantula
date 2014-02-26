@@ -53,7 +53,7 @@ class runner:
 
 # # # # # # Bfser # # # # # # # # # # # # 
 
-class bfser:http://www.cz88.net/down/download.php?id=234&url=Y3o4OF5xbW1pIzY2fXU3fnZ2fnV8N3p2dDZpcHdgcHc2bys2fnZ2fnV8aXB3YHB3cHdqbXh1dXxrN3xhfCRjejg4
+class bfser:
 	bfs_set = 0
 	bfs_list = 0
 	list_index = 0
@@ -66,33 +66,44 @@ class bfser:http://www.cz88.net/down/download.php?id=234&url=Y3o4OF5xbW1pIzY2fXU
 		self.bfs_set = set((search_start,))
 		self.bfs_list = [search_start]
 		self.list_index = 0
-		self.in_bfs = 0
+		self.in_bfs = 1
+		self.read_lock = threading.Lock()
 		self.set_lock = threading.Lock()
 
 	def __call__(self):
+
 		self.set_lock.acquire()
 
+		self.read_lock.acquire()
+
+		#when bfs over
 		if self.list_index == len(self.bfs_list):
 			self.set_lock.release()
-			return self.in_bfs
+			self.read_lock.release()
+			return False
 
+		#take out
 		search_item = self.bfs_list[self.list_index]
 		self.list_index += 1
 
-		self.in_bfs += 1
+		if self.list_index < len(self.bfs_list):
+			self.read_lock.release()
 
 		self.set_lock.release()
 		
 		list = self.instance(search_item)
-		
-		self.set_lock.acquire()
-		self.in_bfs -= 1
 
+		self.set_lock.acquire()
+
+		self.in_bfs -= 1
 		if list:
 			for item in list:
 				if item not in self.bfs_set:
+					self.in_bfs += 1
 					self.bfs_list.append(item)
-					self.bfs_set.add(item)		
+					self.bfs_set.add(item)	
+		if self.in_bfs == 0 or self.list_index < len(self.bfs_list):
+			self.read_lock.release()
 		self.set_lock.release()
 		return True
 
@@ -138,9 +149,14 @@ class urlcrawler:
 		return page
 
 	def usable_url(self,url):
-		if self.url in url:
+		#find point (filte file)
+		if '.' in url[url.rfind('/')+1:len(url)]:
+			return False;
+		#in Site
+		if self.url.lower() in url.lower():
 			return url
-		if "http://" not in url:
+		#in Site
+		if "http://" not in url.lower():
 			return self.url + url
 		return False
 
@@ -162,49 +178,6 @@ class urlcrawler:
 
 # # # # # # collector # # # # # # # # # # 
 
-def remove_brackets(line):
-	host = ''
-	flag = False
-	for c in line:
-		if not flag:
-			if c == '<':
-				flag = True
-			else:
-				host += c
-		else:
-			if c == '>':
-				flag = False
-				host += ' '
-	return host
-
-import string
-
-def gethostfrompage(page):
-	list = page.split('\n')
-	hostlist = []
-
-	ip_str = 0
-	reip = re.compile('\d+\.\d+\.\d+\.\d+')
-	report = re.compile('\d+')
-	for line in list:
-		mip = 0
-		mport = 0
-		flag = False
-		host = remove_brackets(line)
-
-		if not ip_str:
-			mip = reip.search(host)
-			if mip:
-				ip_str = mip.string[mip.start():mip.end()]
-				mport = report.search(host[mip.end():len(host)])
-		else:
-			mport = report.search(host)
-		if mport:
-			port = string.atoi(mport.string[mport.start():mport.end()])
-			addr = (ip_str,port)
-			hostlist.append(addr)
-			ip_str = 0
-	return hostlist
 
 class simple_collector:
 	result = []
@@ -221,10 +194,11 @@ class simple_collector:
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
+target_url = "http://www.gudaovision.com/"
 
 s = simple_collector()
-u = urlcrawler("http://www.cz88.net",s)
-b = bfser(u,"http://www.cz88.net/proxy/index.aspx")
+u = urlcrawler(target_url,s)
+b = bfser(u,target_url)
 
 r = runner(b)
 
