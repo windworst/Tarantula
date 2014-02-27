@@ -133,7 +133,9 @@ class urlcrawler:
 		real_url =  self.usable_url(url)
 		if not real_url:
 			return False
-		page = self.get_page(real_url)
+		redir_url,page = self.get_page(real_url)
+		if redir_url !=real_url:
+			return [redir_url]
 		if not page:
 			return False
 		if not self.page_filter(real_url,page):
@@ -146,10 +148,14 @@ class urlcrawler:
 		try:
 			headers = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'} 
 			req = urllib2.Request(url,headers = headers)
-			page =  urllib2.urlopen(req,timeout = self.timeout).read()
+			read_req =  urllib2.urlopen(req,timeout = self.timeout)
+			redir_url = read_req.geturl()
+			if redir_url != url:
+				return read_req.geturl(),False
+			page = read_req.read()
 		except:
-			return False
-		return page
+			return False,False
+		return url,page
 
 	def usable_url(self,url):
 		#find point (filte file)
