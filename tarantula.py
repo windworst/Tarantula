@@ -118,6 +118,7 @@ class bfser:
 import urllib2
 import re
 import sys
+from cStringIO import StringIO
 
 class urlcrawler:
 
@@ -149,15 +150,27 @@ class urlcrawler:
 	def get_page(self,url):
 		page = 0
 		try:
-			headers = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'} 
-			req = urllib2.Request(url,headers = headers)
-			read_req =  urllib2.urlopen(req,timeout = self.timeout)
-			redir_url = read_req.geturl()
+			request = urllib2.Request(url)
+			UserAgent  = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Safari/537.36'
+			request.add_header('Accept', "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp")
+			request.add_header('Accept-Encoding', "*")
+			request.add_header('User-Agent', UserAgent)
+			rp =  urllib2.urlopen(request,timeout = self.timeout)
+			redir_url = rp.geturl()
 			if redir_url != url:
-				return read_req.geturl(),False
-			page = read_req.read()
+				return redir_url,False
+
+			contentEncoding =  rp.headers.get('Content-Encoding')
+			if  contentEncoding == 'gzip':
+				compresseddata = rp.read()
+				compressedstream = StringIO(compresseddata)
+				gzipper = gzip.GzipFile(fileobj=compressedstream)
+				page = gzipper.read()
+			else:
+				page = rp.read()
 		except:
 			return False,False
+		print page
 		return url,page
 
 	def usable_url(self,url):
