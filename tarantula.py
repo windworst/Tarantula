@@ -72,9 +72,9 @@ class bfser:
 
 	def __call__(self):
 
-		self.set_lock.acquire()
-
 		self.read_lock.acquire()
+
+		self.set_lock.acquire()		
 
 		#when bfs over
 		if self.list_index == len(self.bfs_list):
@@ -86,7 +86,8 @@ class bfser:
 		search_item = self.bfs_list[self.list_index]
 		self.list_index += 1
 
-		if self.list_index < len(self.bfs_list):
+		empty_list = self.list_index == len(self.bfs_list)
+		if not empty_list:
 			self.read_lock.release()
 
 		self.set_lock.release()
@@ -102,8 +103,11 @@ class bfser:
 					self.in_bfs += 1
 					self.bfs_list.append(item)
 					self.bfs_set.add(item)	
-		if self.in_bfs == 0 or self.list_index < len(self.bfs_list):
-			self.read_lock.release()
+		if self.in_bfs == 0 or empty_list and self.in_bfs>0:
+			try:
+				self.read_lock.release()
+			except:
+				pass
 		self.set_lock.release()
 		return True
 
@@ -116,7 +120,7 @@ import sys
 
 class urlcrawler:
 
-	timeout = 5
+	timeout = 30
 	collector = 0
 	url = 0
 
@@ -144,13 +148,15 @@ class urlcrawler:
 			req = urllib2.Request(url,headers = headers)
 			page =  urllib2.urlopen(req,timeout = self.timeout).read()
 		except:
+			print 'unaccessable url:',url
 			return False
 		type = sys.getfilesystemencoding()  
 		return page
 
 	def usable_url(self,url):
 		#find point (filte file)
-		if '.' in url[url.rfind('/')+1:len(url)]:
+		filename = url[url.rfind('/')+1:len(url)]
+		if '.' in filename and '.htm' not in filename.lower():
 			return False;
 		#in Site
 		if self.url.lower() in url.lower():
