@@ -133,6 +133,7 @@ class urlcrawler:
 		real_url =  self.usable_url(url)
 		if not real_url:
 			return False
+		print 'check:',real_url
 		page = self.get_page(real_url)
 		if not page:
 			return False
@@ -150,7 +151,6 @@ class urlcrawler:
 		except:
 			print 'unaccessable url:',url
 			return False
-		type = sys.getfilesystemencoding()  
 		return page
 
 	def usable_url(self,url):
@@ -194,9 +194,18 @@ class simple_collector:
 
 	def __call__(self,url,page):
 		self.mutex.acquire()
-		print url
-		self.result.append(url+'\n')
+		self.result.append( (self.gettitle(page),url) )
 		self.mutex.release()
+	
+	def gettitle(self,page):
+		pos = page.find('<title>')
+		if pos ==-1 :
+			return False
+		pos += len('<title>')
+		end = page.find('</title>',pos)
+		if end == -1:
+			return False
+		return page[pos:end]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -210,6 +219,13 @@ r = runner(b)
 
 open_threads(r,100)
 
-s.result.sort()
-f = open("save.txt","w")
-f.writelines(s.result)
+outlist = sorted(s.result,key = lambda item:item[0])
+
+f = open("save.html","w")
+f.write('%c%c%c'%(0XEF,0XBB,0XBF))
+f.write('<html>\n')
+f.write('<head>\n<meta http-equiv="Content-Type" content="text/html; charse=utf-8" />\n</head>\n')
+f.write('<title>Result</title>\n')
+for item in outlist:
+	f.write( '<a href=\"%s\">%s</a><br />\n' % (item[1],item[0] ) )
+f.write('</html>\n')	
