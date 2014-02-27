@@ -220,25 +220,35 @@ class simple_collector:
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-target_url = "http://coolshell.cn/"
+#output result of collector
+def out_to_file(filename,result):
+	outlist = sorted(result,key = lambda item:item[0])#sort
+	f = open(filename,"w")
+	f.write('%c%c%c'%(0XEF,0XBB,0XBF))#UTF Head
+	f.write('<html>\n')
+	f.write('<head>\n<meta http-equiv="Content-Type" content="text/html; charse=utf-8" />\n</head>\n')
+	f.write('<title>Result</title>\n')
+	for item in outlist:
+		f.write( '<a href=\"%s\">%s</a><br />\n' % (item[1],item[0] ) )
+	f.write('</html>\n')
 
-s = simple_collector()
-u = urlcrawler(target_url,s)
-b = bfser(u,target_url)
+#main
+if __name__=='__main__':
+	if len(sys.argv)<=1:
+		print 'Usage: python me.py <url>'
+		sys.exit()
 
-r = runner(b)
+	target_url = sys.argv[1]
 
-print 'Start...'
-open_threads(r,100)
-print 'Finish...'
+	s = simple_collector()
+	u = urlcrawler(target_url,s)
+	b = bfser(u,target_url)
 
-outlist = sorted(s.result,key = lambda item:item[0])
+	r = runner(b)
 
-f = open("result.html","w")
-f.write('%c%c%c'%(0XEF,0XBB,0XBF))
-f.write('<html>\n')
-f.write('<head>\n<meta http-equiv="Content-Type" content="text/html; charse=utf-8" />\n</head>\n')
-f.write('<title>Result</title>\n')
-for item in outlist:
-	f.write( '<a href=\"%s\">%s</a><br />\n' % (item[1],item[0] ) )
-f.write('</html>\n')	
+	print 'Start...'
+	open_threads(r,100)
+	print 'Finish...'
+
+	out_to_file('result.html',s.result)
+
