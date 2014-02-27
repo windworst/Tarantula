@@ -180,11 +180,11 @@ class urlcrawler:
 		if '.' in filename and 'htm' not in filename.lower():
 			return False;
 		#in Site
+		if "http://" not in url.lower():
+			return "http://" + self.url + url
 		if self.url.lower() in url.lower():
 			return url
-		#in Site
-		if "http://" not in url.lower():
-			return self.url + url
+		
 		return False
 
 	def page_filter(self,url,page):
