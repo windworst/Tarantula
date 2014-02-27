@@ -176,17 +176,26 @@ class urlcrawler:
 
 	def usable_url(self,url):
 		#find point (filte file)
-		filename = url[url.rfind('/')+1:len(url)]
-		if '.' in filename and 'htm' not in filename.lower():
-			return False;
+		filename = url[url.rfind('/')+1:len(url)].lower()
+		if '.' in filename:
+			usable_file = False
+			exts = ['htm','php']
+			for ext in exts:
+				if ext in filename:
+					usable_file = True
+					break
+			if not usable_file:
+				return False
 		#in Site
 		if "http://" not in url.lower():
+			http_url = self.url
 			if "http://" not in self.url.lower():
-				http_url = "http://" + self.url
+				http_url = "http://" + http_url
+			if http_url[-1] != '/' and url[0]!='/':
+				http_url += '/'
 			return http_url + url
 		if self.url.lower() in url.lower():
-			return url
-		
+			return url	
 		return False
 
 	def page_filter(self,url,page):
