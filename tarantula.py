@@ -19,20 +19,21 @@ def open_threads(runner,thread_num):
 	except:
 		pass
 
-	while True:
-		try:
+	
+	try:
+		while True:
 			alive = False
 			for t in thread_list:
 				alive = alive or t.isAlive()
-         		if not alive:
-             			break
-		except KeyboardInterrupt:
-			if runner.still_run:
-				runner.still_run = False
-				sys.stdout.write ('\nAccept Ctrl+C, Quitting...\n')
-				sys.stdout.flush()
-		except:
-			break
+			if not alive:
+				break
+	except KeyboardInterrupt:
+		if runner.still_run:
+			runner.still_run = False
+			sys.stdout.write ('\nAccept Ctrl+C, Quitting...\n')
+			sys.stdout.flush()
+	except:
+		pass
 	runner.still_run = False
 
 #multi-threads runner
@@ -209,6 +210,7 @@ class simple_collector:
 		self.mutex.release()
 	
 	def gettitle(self,page):
+		page = page.lower()
 		pos = page.find('<title>')
 		if pos ==-1 :
 			return False
@@ -235,10 +237,20 @@ def out_to_file(filename,result):
 #main
 if __name__=='__main__':
 	if len(sys.argv)<=1:
-		print 'Usage: python me.py <url>'
+		print 'Usage: python me.py <Site> [threads=10]'
 		sys.exit()
 
 	target_url = sys.argv[1]
+	thread_num = 10
+	if len(sys.argv) >= 3:
+		thread_num = int(sys.argv[2])
+
+	if 'http://' not in target_url.lower():
+		target_url = 'http://'+target_url
+	if target_url[-1:len(target_url)] != '/':
+		target_url = target_url + '/'
+	
+	print 'Site:',target_url,'threads:',thread_num
 
 	s = simple_collector()
 	u = urlcrawler(target_url,s)
@@ -247,7 +259,7 @@ if __name__=='__main__':
 	r = runner(b)
 
 	print 'Start...'
-	open_threads(r,100)
+	open_threads(r,thread_num)
 	print 'Finish...'
 
 	out_to_file('result.html',s.result)
