@@ -130,6 +130,8 @@ class urlcrawler:
 		self.result = []
 
 	def __call__(self,url):
+		if not url:
+			return False
 		real_url =  self.usable_url(url)
 		if not real_url:
 			return False
