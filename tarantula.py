@@ -232,17 +232,20 @@ class simple_collector:
 	def __call__(self,url,page):
 		self.mutex.acquire()
 		print 'get:',url
-		self.result.append( (self.gettitle(page),url) )
+		title = self.gettitle(page)
+		if not title:
+			title = url
+		self.result.append((title,url))
 		self.mutex.release()
 	
 	def gettitle(self,page):
 		page = to_utf8(page)
-		page = page.lower()
-		pos = page.find('<title>')
+		page_lower = page.lower()
+		pos = page_lower.find('<title>')
 		if pos ==-1 :
 			return False
 		pos += len('<title>')
-		end = page.find('</title>',pos)
+		end = page_lower.find('</title>',pos)
 		if end == -1:
 			return False
 		return page[pos:end]
