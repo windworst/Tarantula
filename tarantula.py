@@ -181,7 +181,9 @@ class urlcrawler:
 			return False;
 		#in Site
 		if "http://" not in url.lower():
-			return "http://" + self.url + url
+			if "http://" not in self.url.lower():
+				http_url = "http://" + self.url
+			return http_url + url
 		if self.url.lower() in url.lower():
 			return url
 		
