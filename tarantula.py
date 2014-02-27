@@ -116,8 +116,8 @@ class bfser:
 # # # # # # urlcrawler # # # # # # # # # # 
 
 import urllib2
-import re
 import sys
+import gzip
 from cStringIO import StringIO
 
 class urlcrawler:
@@ -156,10 +156,11 @@ class urlcrawler:
 			request.add_header('Accept-Encoding', "*")
 			request.add_header('User-Agent', UserAgent)
 			rp =  urllib2.urlopen(request,timeout = self.timeout)
+			
 			redir_url = rp.geturl()
 			if redir_url != url:
 				return redir_url,False
-
+			
 			contentEncoding =  rp.headers.get('Content-Encoding')
 			if  contentEncoding == 'gzip':
 				compresseddata = rp.read()
@@ -168,15 +169,15 @@ class urlcrawler:
 				page = gzipper.read()
 			else:
 				page = rp.read()
+			
 		except:
 			return False,False
-		print page
 		return url,page
 
 	def usable_url(self,url):
 		#find point (filte file)
 		filename = url[url.rfind('/')+1:len(url)]
-		if '.' in filename and '.htm' not in filename.lower():
+		if '.' in filename and 'htm' not in filename.lower():
 			return False;
 		#in Site
 		if self.url.lower() in url.lower():
@@ -191,23 +192,35 @@ class urlcrawler:
 
 	def geturlsfrompage(self,page):
 		url_list = []
-		url_head = "<a href="
-		list = page.split('\n')
-		p = re.compile("<a\s+href=\\\"\S[^\\\"]+\\\"")
-		for line in list:
-			m = p.search(line)
-			if m:
-				url = m.string[m.start()+len(url_head)+1:m.end()-1]
-				#remove Anchor
-				hashpos = url.rfind('#')
-				if hashpos != -1:
-					url = url[0:hashpos]
-				url_list.append(url)
+		url_head = 'href="'
+		pos = 0;
+		while True:
+			pos = page.find(url_head,pos)
+			if pos==-1:
+				break
+			pos += len(url_head)
+			end = page.find('"',pos)
+			if end==-1:
+				break
+			url = page[pos:end]
+			pos = end + 1
+			#remove Anchor
+			hashpos = url.rfind('#')
+			if hashpos != -1:
+				url = url[0:hashpos]
+			url_list.append(url)
 		return url_list
 
 
 # # # # # # collector # # # # # # # # # # 
-
+def to_utf8(text):
+	charset_list = ['gbk','gb2312','gb18030']
+	for charset in charset_list:
+		try:
+			return text.decode(charset).encode('utf-8')
+		except Exception, e:
+			pass
+	return text
 
 class simple_collector:
 	result = []
@@ -223,6 +236,7 @@ class simple_collector:
 		self.mutex.release()
 	
 	def gettitle(self,page):
+		page = to_utf8(page)
 		page = page.lower()
 		pos = page.find('<title>')
 		if pos ==-1 :
@@ -237,7 +251,7 @@ class simple_collector:
 
 #output result of collector
 def out_to_file(filename,result):
-	outlist = sorted(result,key = lambda item:item[0])#sort
+	outlist = sorted(result,key = lambda item:item[0])
 	f = open(filename,"w")
 	f.write('%c%c%c'%(0XEF,0XBB,0XBF))#UTF Head
 	f.write('<html>\n')
@@ -250,14 +264,15 @@ def out_to_file(filename,result):
 #main
 if __name__=='__main__':
 	if len(sys.argv)<=1:
-		print 'Usage: python me.py <Site> [threads=10]'
+		print 'Usage: python me.py <Host Site> [threads=10]'
 		sys.exit()
 
-	target_url = sys.argv[1]
+	target_host = sys.argv[1].lower()
 	thread_num = 10
 	if len(sys.argv) >= 3:
 		thread_num = int(sys.argv[2])
 
+	target_url = target_host
 	if 'http://' not in target_url.lower():
 		target_url = 'http://'+target_url
 	if target_url[-1:len(target_url)] != '/':
@@ -266,7 +281,7 @@ if __name__=='__main__':
 	print 'Site:',target_url,'threads:',thread_num
 
 	s = simple_collector()
-	u = urlcrawler(target_url,s)
+	u = urlcrawler(target_host,s)
 	b = bfser(u,target_url)
 
 	r = runner(b)
