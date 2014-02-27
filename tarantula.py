@@ -133,7 +133,6 @@ class urlcrawler:
 		real_url =  self.usable_url(url)
 		if not real_url:
 			return False
-		print 'check:',real_url
 		page = self.get_page(real_url)
 		if not page:
 			return False
@@ -149,7 +148,6 @@ class urlcrawler:
 			req = urllib2.Request(url,headers = headers)
 			page =  urllib2.urlopen(req,timeout = self.timeout).read()
 		except:
-			print 'unaccessable url:',url
 			return False
 		return page
 
@@ -178,6 +176,10 @@ class urlcrawler:
 			m = p.search(line)
 			if m:
 				url = m.string[m.start()+len(url_head)+1:m.end()-1]
+				#remove Anchor
+				hashpos = url.rfind('#')
+				if hashpos != -1:
+					url = url[0:hashpos]
 				url_list.append(url)
 		return url_list
 
@@ -194,6 +196,7 @@ class simple_collector:
 
 	def __call__(self,url,page):
 		self.mutex.acquire()
+		print 'get:',url
 		self.result.append( (self.gettitle(page),url) )
 		self.mutex.release()
 	
@@ -209,7 +212,7 @@ class simple_collector:
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-target_url = "http://www.gudaovision.com/"
+target_url = "http://coolshell.cn/"
 
 s = simple_collector()
 u = urlcrawler(target_url,s)
@@ -217,11 +220,13 @@ b = bfser(u,target_url)
 
 r = runner(b)
 
+print 'Start...'
 open_threads(r,100)
+print 'Finish...'
 
 outlist = sorted(s.result,key = lambda item:item[0])
 
-f = open("save.html","w")
+f = open("result.html","w")
 f.write('%c%c%c'%(0XEF,0XBB,0XBF))
 f.write('<html>\n')
 f.write('<head>\n<meta http-equiv="Content-Type" content="text/html; charse=utf-8" />\n</head>\n')
