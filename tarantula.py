@@ -83,7 +83,7 @@ class bfser:
 			self.read_lock.release()
 			return False
 
-		#take out
+		#take outpage_lower
 		search_item = self.bfs_list[self.list_index]
 		self.list_index += 1
 
@@ -264,6 +264,7 @@ def out_to_file(filename,result):
 		f.write( '<a href=\"%s\">%s</a><br />\n' % (item[1],item[0] ) )
 	f.write('</html>\n')
 
+import time
 #main
 if __name__=='__main__':
 	if len(sys.argv)<=1:
@@ -289,9 +290,15 @@ if __name__=='__main__':
 
 	r = runner(b)
 
+	start = time.clock()
 	print 'Start...'
+
 	open_threads(r,thread_num)
 	print 'Finish...'
+
+	checked = b.list_index
+	get = len(s.result)
+	print 'Checked:',checked,'Get:',get,'Time:',time.clock()-start,'sec'
 
 	out_to_file('result.html',s.result)
 
