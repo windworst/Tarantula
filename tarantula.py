@@ -242,8 +242,11 @@ class urlcrawler:
 			if hashpos != -1:
 				url = url[0:hashpos]
 			url = url.lower()
-			if url[-1]!='/':
-				url = url + '/'
+			try:
+				if url[-1]=='/':
+					url = url[0:-1]
+			except:
+				pass
 			url_list.append(url)
 		return url_list
 
@@ -316,8 +319,6 @@ if __name__=='__main__':
 	target_host = target_url
 	if 'http://' not in target_url and 'https://' not in target_url:
 		target_url = 'http://'+target_url
-	if target_url[-1:len(target_url)] != '/':
-		target_url = target_url + '/'
 
 	try:
 		target_host = str(urlparse(target_url).hostname)
