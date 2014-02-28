@@ -124,6 +124,7 @@ from urlparse import urlparse
 class urlcrawler:
 
 	timeout = 30
+	page_maxsize = 100*1024
 	collector = 0
 	url = 0
 
@@ -166,14 +167,15 @@ class urlcrawler:
 			
 			contentEncoding =  rp.headers.get('Content-Encoding')
 			if  contentEncoding == 'gzip':
-				compresseddata = rp.read()
+				compresseddata = rp.read(self.page_maxsize)
 				compressedstream = StringIO(compresseddata)
 				gzipper = gzip.GzipFile(fileobj=compressedstream)
 				page = gzipper.read()
 			else:
-				page = rp.read()
+				page = rp.read(self.page_maxsize)
 			
-		except:
+		except Exception,e:
+			print e
 			return False,False
 		return url,page
 
@@ -240,6 +242,8 @@ class urlcrawler:
 			if hashpos != -1:
 				url = url[0:hashpos]
 			url = url.lower()
+			if url[-1]!='/':
+				url = url + '/'
 			url_list.append(url)
 		return url_list
 
