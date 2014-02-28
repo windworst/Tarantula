@@ -309,12 +309,12 @@ if __name__=='__main__':
 	if len(sys.argv) >= 3:
 		thread_num = int(sys.argv[2])
 
+	target_host = target_url
 	if 'http://' not in target_url and 'https://' not in target_url:
 		target_url = 'http://'+target_url
 	if target_url[-1:len(target_url)] != '/':
 		target_url = target_url + '/'
 
-	target_host = target_url
 	try:
 		target_host = str(urlparse(target_url).hostname)
 	except:
@@ -340,5 +340,5 @@ if __name__=='__main__':
 	get = len(s.result)
 	print 'Checked:',checked,'Get:',get,'Time:',time.clock()-start,'sec'
 
-	out_to_file('result.html',s.result)
+	out_to_file(target_host+'.html',s.result)
 
