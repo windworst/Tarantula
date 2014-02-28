@@ -239,6 +239,7 @@ class urlcrawler:
 			hashpos = url.rfind('#')
 			if hashpos != -1:
 				url = url[0:hashpos]
+			url = url.lower()
 			url_list.append(url)
 		return url_list
 
