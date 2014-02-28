@@ -119,12 +119,15 @@ import urllib2
 import sys
 import gzip
 from cStringIO import StringIO
+from urlparse import urlparse
 
 class urlcrawler:
 
 	timeout = 30
 	collector = 0
 	url = 0
+
+	bad_filter_rules  = ['#', '.jpeg','.jpg','.rar','.png','.zip','.rar','.7z','javascript:','mailto:']
 
 	def __init__(self,url,collector):
 		self.url = url
@@ -174,29 +177,46 @@ class urlcrawler:
 			return False,False
 		return url,page
 
+	def url_escape(self, url):
+		try:
+			url = urllib2.unquote(url)
+			url = urllib2.quote(url.encode('utf8'))
+			url = url.replace("%3A", ":")
+		except Exception, e:
+			pass#print "[E]UrlEscape->%s,Url:%s" % (e, url) 
+
+		return url;
+
+
 	def usable_url(self,url):
-		#find point (filte file)
-		filename = url[url.rfind('/')+1:len(url)].lower()
-		if '.' in filename:
-			usable_file = False
-			exts = ['htm','php']
-			for ext in exts:
-				if ext in filename:
-					usable_file = True
-					break
-			if not usable_file:
+		url_lower = url.lower()
+		host = self.url 
+
+		#out of host
+		if url_lower.find("http:") >= 0 or url_lower.find("https:") >= 0:
+			urlHost = ''
+			try:
+				urlHost = str(urlparse(url).hostname) # Have Bug
+			except Exception, e:
+				pass#print "[E]->UrlFilter: %s" % (e)
+
+			if urlHost.find(host) == -1:
 				return False
-		#in Site
-		if "http://" not in url.lower():
-			http_url = self.url
-			if "http://" not in self.url.lower():
-				http_url = "http://" + http_url
-			if http_url[-1] != '/' and url[0]!='/':
-				http_url += '/'
-			return http_url + url
-		if self.url.lower() in url.lower():
-			return url	
-		return False
+
+		#url filt
+		for rule in self.bad_filter_rules:
+			if url_lower.find(rule) != -1: 
+				return False
+
+		#fix url
+		if url.find("http:") == -1 and url.find("https:") == -1:
+			if url[0] != "/" : url = "/" + url
+		if url.find("http:") == -1 and url.find("https:") == -1:
+			url = "http://" + host + url
+
+		url = self.url_escape(url)
+		return url
+	
 
 	def page_filter(self,url,page):
 		return True
@@ -282,18 +302,26 @@ if __name__=='__main__':
 		print 'Usage: python me.py <Host Site> [threads=10]'
 		sys.exit()
 
-	target_host = sys.argv[1].lower()
+	target_url = sys.argv[1].lower()
+
 	thread_num = 10
 	if len(sys.argv) >= 3:
 		thread_num = int(sys.argv[2])
 
-	target_url = target_host
 	if 'http://' not in target_url.lower():
 		target_url = 'http://'+target_url
 	if target_url[-1:len(target_url)] != '/':
 		target_url = target_url + '/'
+
+	target_host = target_url
+	try:
+		target_host = str(urlparse(target_url).hostname)
+	except:
+		pass
 	
-	print 'Site:',target_url,'threads:',thread_num
+	print 'Site:',target_url
+	print 'host:',target_host
+	print 'threads:',thread_num
 
 	s = simple_collector()
 	u = urlcrawler(target_host,s)
