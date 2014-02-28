@@ -83,7 +83,7 @@ class bfser:
 			self.read_lock.release()
 			return False
 
-		#take outpage_lower
+		#take out
 		search_item = self.bfs_list[self.list_index]
 		self.list_index += 1
 
