@@ -308,7 +308,8 @@ if __name__=='__main__':
 	if len(sys.argv) >= 3:
 		thread_num = int(sys.argv[2])
 
-	if 'http://' not in target_url.lower():
+	target_url_lower = target_url.lower()
+	if 'http://' not in target_url_lower and 'https://' not in target_url_lower:
 		target_url = 'http://'+target_url
 	if target_url[-1:len(target_url)] != '/':
 		target_url = target_url + '/'
