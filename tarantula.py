@@ -269,16 +269,16 @@ class simple_collector:
 		self.mutex = threading.Lock()
 
 	def __call__(self,url,page):
+		page = to_utf8(page)
 		self.mutex.acquire()
-		print 'get:',url
 		title = self.gettitle(page)
+		print 'get:',url
 		if not title:
 			title = url
 		self.result.append((title,url))
 		self.mutex.release()
 	
 	def gettitle(self,page):
-		page = to_utf8(page)
 		page_lower = page.lower()
 		pos = page_lower.find('<title>')
 		if pos ==-1 :
