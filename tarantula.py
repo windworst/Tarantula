@@ -80,7 +80,10 @@ class bfser:
 		#when bfs over
 		if self.list_index == len(self.bfs_list):
 			self.set_lock.release()
-			self.read_lock.release()
+			try:
+				self.read_lock.release()
+			except:
+				pass
 			return False
 
 		#take out
@@ -89,7 +92,10 @@ class bfser:
 
 		empty_list = self.list_index == len(self.bfs_list)
 		if not empty_list:
-			self.read_lock.release()
+			try:
+				self.read_lock.release()
+			except:
+				pass
 
 		self.set_lock.release()
 		
@@ -128,7 +134,8 @@ class urlcrawler:
 	collector = 0
 	url = 0
 
-	bad_filter_rules  = ['#', '.jpeg','.jpg','.rar','.png','.zip','.rar','.7z','javascript:','mailto:']
+	bad_filter_rules  = ['#','.xml','.css','.gif','.jpeg','.jpg',
+			'.rar','.png','.zip','.rar','.7z','javascript:','mailto:']
 
 	def __init__(self,url,collector):
 		self.url = url
@@ -191,23 +198,23 @@ class urlcrawler:
 
 
 	def usable_url(self,url):
-		url_lower = url.lower()
+		url = url.lower()
 		host = self.url 
 
 		#out of host
-		if url_lower.find("http:") >= 0 or url_lower.find("https:") >= 0:
+		if url.find("http:") >= 0 or url.find("https:") >= 0:
 			urlHost = ''
 			try:
-				urlHost = str(urlparse(url).hostname) # Have Bug
+				urlHost = str(urlparse(url).hostname) 
 			except Exception, e:
-				pass#print "[E]->UrlFilter: %s" % (e)
+				pass
 
 			if urlHost.find(host) == -1:
 				return False
 
 		#url filt
 		for rule in self.bad_filter_rules:
-			if url_lower.find(rule) != -1: 
+			if url.find(rule) != -1: 
 				return False
 
 		#fix url
@@ -236,17 +243,20 @@ class urlcrawler:
 			if end==-1:
 				break
 			url = page[pos:end]
+			url = url.lower()
 			pos = end + 1
+
 			#remove Anchor
 			hashpos = url.rfind('#')
 			if hashpos != -1:
 				url = url[0:hashpos]
-			url = url.lower()
-			try:
-				if url[-1]=='/':
-					url = url[0:-1]
-			except:
-				pass
+
+			#remove '/'
+			if not url or len(url)==0:
+				break
+			if url[-1]=='/':
+				url = url[0:-1]
+
 			url_list.append(url)
 		return url_list
 
