@@ -253,7 +253,7 @@ class urlcrawler:
 
 			#remove '/'
 			if not url or len(url)==0:
-				break
+				continue
 			if url[-1]=='/':
 				url = url[0:-1]
 
