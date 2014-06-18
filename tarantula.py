@@ -121,11 +121,11 @@ class bfser:
 
 # # # # # # urlcrawler # # # # # # # # # # 
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import sys
 import gzip
-from cStringIO import StringIO
-from urlparse import urlparse
+from io import StringIO
+from urllib.parse import urlparse
 
 class urlcrawler:
 
@@ -161,12 +161,12 @@ class urlcrawler:
 	def get_page(self,url):
 		page = 0
 		try:
-			request = urllib2.Request(url)
+			request = urllib.request.Request(url)
 			UserAgent  = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Safari/537.36'
 			request.add_header('Accept', "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp")
 			request.add_header('Accept-Encoding', "*")
 			request.add_header('User-Agent', UserAgent)
-			rp =  urllib2.urlopen(request,timeout = self.timeout)
+			rp =  urllib.request.urlopen(request,timeout = self.timeout)
 			
 			redir_url = rp.geturl()
 			if redir_url != url:
@@ -181,17 +181,17 @@ class urlcrawler:
 			else:
 				page = rp.read(self.page_maxsize)
 			
-		except Exception,e:
-			print e
+		except Exception as e:
+			print(e)
 			return False,False
 		return url,page
 
 	def url_escape(self, url):
 		try:
-			url = urllib2.unquote(url)
-			url = urllib2.quote(url.encode('utf8'))
+			url = urllib.parse.unquote(url)
+			url = urllib.parse.quote(url.encode('utf8'))
 			url = url.replace("%3A", ":")
-		except Exception, e:
+		except Exception as e:
 			pass#print "[E]UrlEscape->%s,Url:%s" % (e, url) 
 
 		return url;
@@ -206,7 +206,7 @@ class urlcrawler:
 			urlHost = ''
 			try:
 				urlHost = str(urlparse(url).hostname) 
-			except Exception, e:
+			except Exception as e:
 				pass
 
 			if urlHost.find(host) == -1:
@@ -267,7 +267,7 @@ def to_utf8(text):
 	for charset in charset_list:
 		try:
 			return text.decode(charset).encode('utf-8')
-		except Exception, e:
+		except Exception as e:
 			pass
 	return text
 
@@ -282,7 +282,7 @@ class simple_collector:
 		page = to_utf8(page)
 		self.mutex.acquire()
 		title = self.gettitle(page)
-		print 'get:',url
+		print(('get:',url))
 		if not title:
 			title = url
 		self.result.append((title,url))
@@ -317,7 +317,7 @@ import time
 #main
 if __name__=='__main__':
 	if len(sys.argv)<=1:
-		print 'Usage: python me.py <Host Site> [threads=10]'
+		print('Usage: python me.py <Host Site> [threads=10]')
 		sys.exit()
 
 	target_url = sys.argv[1].lower()
@@ -335,9 +335,9 @@ if __name__=='__main__':
 	except:
 		pass
 	
-	print 'Site:',target_url
-	print 'host:',target_host
-	print 'threads:',thread_num
+	print(('Site:',target_url))
+	print(('host:',target_host))
+	print(('threads:',thread_num))
 
 	s = simple_collector()
 	u = urlcrawler(target_host,s)
@@ -346,14 +346,14 @@ if __name__=='__main__':
 	r = runner(b)
 
 	start = time.clock()
-	print 'Start...'
+	print('Start...')
 
 	open_threads(r,thread_num)
-	print 'Finish...'
+	print('Finish...')
 
 	checked = b.list_index
 	get = len(s.result)
-	print 'Checked:',checked,'Get:',get,'Time:',time.clock()-start,'sec'
+	print(('Checked:',checked,'Get:',get,'Time:',time.clock()-start,'sec'))
 
 	out_to_file(target_host+'.html',s.result)
 
