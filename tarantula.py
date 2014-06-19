@@ -175,7 +175,7 @@ class urlcrawler:
 			contentEncoding =  rp.headers.get('Content-Encoding')
 			if  contentEncoding == 'gzip':
 				compresseddata = rp.read(self.page_maxsize)
-				compressedstream = StringIO(compresseddata)
+				compressedstream = StringIO(compresseddata.decode('','ignore'))
 				gzipper = gzip.GzipFile(fileobj=compressedstream)
 				page = gzipper.read()
 			else:
@@ -234,6 +234,7 @@ class urlcrawler:
 		url_list = []
 		url_head = 'href="'
 		pos = 0;
+		page = page.decode('gbk','ignore')
 		while True:
 			pos = page.find(url_head,pos)
 			if pos==-1:
@@ -289,7 +290,7 @@ class simple_collector:
 		self.mutex.release()
 	
 	def gettitle(self,page):
-		page_lower = page.lower()
+		page_lower = page.lower().decode('gbk','ignore')
 		pos = page_lower.find('<title>')
 		if pos ==-1 :
 			return False
