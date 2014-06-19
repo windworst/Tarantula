@@ -286,6 +286,8 @@ class simple_collector:
 		print(('get:',url))
 		if not title:
 			title = url
+		else:
+			title = title.decode('utf-8','ignore')
 		self.result.append((title,url))
 		self.mutex.release()
 	
@@ -306,7 +308,7 @@ class simple_collector:
 def out_to_file(filename,result):
 	outlist = sorted(result,key = lambda item:item[0])
 	f = open(filename,"w")
-	f.write('%c%c%c'%(0XEF,0XBB,0XBF))#UTF Head
+	#f.write('%c%c%c'%(0XEF,0XBB,0XBF))#UTF Head
 	f.write('<html>\n')
 	f.write('<head>\n<meta http-equiv="Content-Type" content="text/html; charse=utf-8" />\n</head>\n')
 	f.write('<title>Result</title>\n')
